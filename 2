@@ -1,0 +1,101 @@
+#include <iostream>
+#include <vector>
+using namespace std;
+
+class Polynomial; // Forward declaration
+
+class Term {
+    friend class Polynomial; // Allow Polynomial to access private members
+    friend ostream& operator<<(ostream& os, const Term& term);
+    friend istream& operator>>(istream& is, Term& term);
+
+private:
+    float coef; // coefficient
+    int exp;    // exponent
+
+public:
+    Term(float c = 0, int e = 0) : coef(c), exp(e) {}
+
+    // For comparison purposes, may be helpful for sorting or checking equality
+    bool operator<(const Term& other) const {
+        return exp < other.exp;
+    }
+};
+
+ostream& operator<<(ostream& os, const Term& term) {
+    os << term.coef << "x^" << term.exp;
+    return os;
+}
+
+istream& operator>>(istream& is, Term& term) {
+    cout << "Enter coefficient: ";
+    is >> term.coef;
+    cout << "Enter exponent: ";
+    is >> term.exp;
+    return is;
+}
+
+class Polynomial {
+    friend ostream& operator<<(ostream& os, const Polynomial& poly);
+    friend istream& operator>>(istream& is, Polynomial& poly);
+
+private:
+    vector<Term> termArray; // Array of nonzero terms
+
+public:
+    Polynomial() {}
+
+    void addTerm(float coef, int exp) {
+        termArray.push_back(Term(coef, exp));
+    }
+
+    void simplify() {
+        // Simplify terms (combine like terms, etc.)
+        sort(termArray.begin(), termArray.end(), [](const Term& a, const Term& b) { return a.exp > b.exp; });
+        vector<Term> simplified;
+        for (size_t i = 0; i < termArray.size(); ++i) {
+            if (simplified.empty() || simplified.back().exp != termArray[i].exp) {
+                simplified.push_back(termArray[i]);
+            } else {
+                simplified.back().coef += termArray[i].coef;
+            }
+        }
+        termArray = simplified;
+    }
+};
+
+ostream& operator<<(ostream& os, const Polynomial& poly) {
+    if (poly.termArray.empty()) {
+        os << "0";
+    } else {
+        for (size_t i = 0; i < poly.termArray.size(); ++i) {
+            if (i > 0 && poly.termArray[i].coef > 0) os << " + ";
+            os << poly.termArray[i];
+        }
+    }
+    return os;
+}
+
+istream& operator>>(istream& is, Polynomial& poly) {
+    int numTerms;
+    cout << "Enter the number of terms: ";
+    is >> numTerms;
+    for (int i = 0; i < numTerms; ++i) {
+        Term t;
+        is >> t;
+        poly.addTerm(t.coef, t.exp);
+    }
+    poly.simplify();
+    return is;
+}
+
+int main() {
+    Polynomial p;
+    cout << "Input polynomial:" << endl;
+    cin >> p;
+
+    cout << "The polynomial is: " << p << endl;
+
+    return 0;
+}
+
